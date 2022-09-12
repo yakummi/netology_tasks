@@ -1,0 +1,1 @@
+Sep 12 2022 16:44:44 | recurse | ([1, 2, None],) | <generator object recurse at 0x000002DFEC587DF0>
