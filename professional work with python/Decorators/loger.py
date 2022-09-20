@@ -1,4 +1,5 @@
 import datetime
+import os
 
 nested_list = [
     ['a', 'b', 'c'],
@@ -6,21 +7,22 @@ nested_list = [
     [1, 2, None],
 ]
 
-def loger():
-    def loger_(some):
-        def writer(*args, **kwargs):
+def loger(path):
+    def loger_(some_function):
+        def new_function(*args, **kwargs):
             date = datetime.datetime.now().strftime("%b %d %Y %H:%M:%S")
-            name = some.__name__
+            name = some_function.__name__
             args_ = args
-            result = some(*args, **kwargs)
-            with open('time.txt', 'w', encoding='utf-8') as f:
-                f.write(f'{date} | {name} | {args_} | {result}\n')
+            result = some_function(*args, **kwargs)
+            with open(path + '/time.txt', 'a') as file:
+                file.write(f'{date} | {name} | {args_} | {result}\n')
             return result
-        return writer
+        return new_function
     return loger_
 
+PATH = os.path.dirname(os.path.realpath(__file__))
 
-@loger()
+@loger(PATH)
 def recurse(arr):
     for item in arr:
         if isinstance(item, list):
