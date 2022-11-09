@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>О книге</title>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1><a href="/books">Каталог</a></h1>
+    </div>
+    <div class="row">
+        {% for element in books_info %}
+        <div class="book col-md-4">
+            <h2><a href="/books/{{element.pub_date|date:'Y-m-d'}}">{{element.0.name}}</a></h2>
+            <p>Автор: {{element.0.author}}</p>
+            <p>Дата публикации: {{element.0.pub_date}}</p>
+            <br>
+        </div>
+        {% endfor %}
+        {% if date and previous_date %}
+            <div>
+                <div class="custom_bottom_1">
+                    <a href="/books/{{ previous_date }}"><-- {{ previous_date }}</a>
+                </div>
+                {% endif %}
+                {% if date and next_date%}
+                <div class="custom_bottom_2">
+                    <a href="/books/{{ next_date }}">{{ next_date }} --></a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+</body>
+</html>
