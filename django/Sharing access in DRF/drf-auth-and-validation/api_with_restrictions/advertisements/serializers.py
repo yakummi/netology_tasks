@@ -25,18 +25,18 @@ class AdvertisementSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = self.context['request'].user
-        validated_data["creator"] = self.context["request"].user
+        validated_data["creator"] = user
         return super().create(validated_data)
 
     def validate(self, data):
         user = self.context['request'].user
-        objects = Advertisement.objects.filter(status='OPEN', creator=user)
+        objects = Advertisement.objects.filter(status='OPEN', creator=user).count()
         method = self.context['request'].method
         status = self.initial_data.get('status')
 
-        if len(objects) >= 10 and method == 'POST':
-            raise ValidationError('Превышено кол-во открытых объявлений')
-        if len(objects) >= 10 and method == 'PATCH' and status == 'OPEN':
-            raise ValidationError('Превышено кол-во открытых объявлений')
+        if count_objects >= 10 and method in ['POST', 'PUT'] and not status or status == 'OPEN':
+            raise ValidationError('Превышено количество открытых объявлений')
+        if count_objects >= 10 and status == 'OPEN' and method == 'PATCH':
+            raise ValidationError('Превышено количество открытых объявлений')
 
         return data
