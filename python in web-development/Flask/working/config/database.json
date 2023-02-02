@@ -1,0 +1,7 @@
+{
+  "TYPE_DB": "postgresql",
+  "USER_NAME": "",
+  "USER_PASSWORD": "",
+  "IP_ADDRESS": "127.0.0.1:5432",
+  "DB_NAME": ""
+}
