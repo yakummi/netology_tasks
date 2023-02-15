@@ -11,26 +11,29 @@ async def get_swapi_people(people_id):
     await session.close()
     return response_json
 
-n = 40 # кол-во персонажей
+n = 10 # кол-во персонажей
+
+async def insert_people(people_chunk, id):
+    db.add_player(id_player=id,
+                  birth_year=people_chunk['birth_year'],
+                  eye_color=people_chunk['eye_color'],
+                  films=people_chunk['films'],
+                  gender=people_chunk['gender'],
+                  hair_color=people_chunk['hair_color'],
+                  height=people_chunk['height'],
+                  homeworld=people_chunk['homeworld'],
+                  mass=people_chunk['mass'],
+                  name=people_chunk['name'],
+                  skin_color=people_chunk['skin_color'],
+                  species=people_chunk['species'],
+                  starships=people_chunk['starships'],
+                  vehicles=people_chunk['vehicles'])
 
 async def main():
-    for i in range(1, n+1):
-        coroutine = get_swapi_people(i)
-        result = await coroutine
-        db.add_player(id_player=i,
-                      birth_year=result['birth_year'],
-                      eye_color=result['eye_color'],
-                      films=result['films'],
-                      gender=result['gender'],
-                      hair_color=result['hair_color'],
-                      height=result['height'],
-                      homeworld=result['homeworld'],
-                      mass=result['mass'],
-                      name=result['name'],
-                      skin_color=result['skin_color'],
-                      species=result['species'],
-                      starships=result['starships'],
-                      vehicles=result['vehicles'])
+     for i in range(1, n):
+         coroutine = get_swapi_people(i)
+         result = await coroutine
+         await insert_people(result, i)
 
 if __name__ == '__main__':
     asyncio.run(main())
