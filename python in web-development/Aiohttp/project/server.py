@@ -42,9 +42,9 @@ async def session_middleware(requests: web.Request, handler):
 app.cleanup_ctx.append(orm_context)
 app.middlewares.append(session_middleware)
 
-async def get_advertisement(advertisement_id, session):
+async def get_advertisement(advertisement_id: int, session: Session):
 
-    advertisement = await session.get(advertisement_id, session)
+    advertisement = await session.get(Advertisements, advertisement_id)
 
     if advertisement is None:
         raise web.HTTPNotFound(text=json.dumps({
@@ -52,13 +52,14 @@ async def get_advertisement(advertisement_id, session):
             'message': 'We could not find this advertisement'
         }), content_type='application/json')
 
+    return advertisement
 
 class AdvertisementView(web.View):
     async def get(self):
         session = self.request['session']
         advertisement_id = int(self.request.match_info['advertisement_id'])
         advertisement = await get_advertisement(advertisement_id=advertisement_id,
-                                                session=session)
+                                                        session=session)
 
         return web.json_response({
             'id': advertisement.id,
@@ -91,8 +92,9 @@ class AdvertisementView(web.View):
 
 app.add_routes(
     [
-        web.get('/advertisements/{advertisement_id:\d+}', AdvertisementView),
-        web.post('/advertisements/', AdvertisementView)
+        web.get('/advertisements/{advertisement_id:\d+}/', AdvertisementView),
+        web.post('/advertisements/', AdvertisementView),
+        web.delete('/advertisements/{advertisement_id:\d+}/', AdvertisementView)
     ]
 )
 
