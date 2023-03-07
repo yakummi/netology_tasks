@@ -1,0 +1,70 @@
+import os.path
+from upscale import upscale
+from flask import Flask, request, jsonify, url_for, Response
+from celery import Celery
+
+app = Flask(__name__)
+app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
+app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
+celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
+celery.conf.update(app.config)
+
+
+class ContextTask(celery.Task):
+    def __call__(self, *args, **kwargs):
+        with app.app_context():
+            return self.run(*args, **kwargs)
+
+celery.Task = ContextTask
+
+
+@celery.task(bind=True)
+def process_image(filename):
+    try:
+        with open(filename, 'rb') as f:
+            image_bytes = f.read()
+            result_filename = os.path.basename(filename)
+            result_bytes = upscale(f'images/{result_filename}', image_bytes)
+            with open(f'processed/{result_filename}', 'wb') as f:
+                f.write(result_bytes)
+            return {'status': 'SUCCESS',
+                    'result': result_filename}
+
+    except Exception as ex:
+        return {'status': 'Error'}
+
+
+@app.route('/upscale/', methods=['POST'])
+def upscale_image():
+    file = request.files['image']
+    print(file)
+    filename = file.filename
+    print(filename)
+    task = process_image.apply_async(filename)
+    return jsonify({
+        'id': task.id
+    })
+
+
+@app.route('/tasks/<task_id>', methods=['GET'])
+def get_task(task_id):
+    task = process_image.AsyncResult(task_id)
+    if task.state == 'PENDING':
+        return jsonify({'status': 'PENDING'})
+    elif task.state == 'SUCCESS':
+        result_filename = task.result['result']
+        result_url = url_for('get_processed', filename=result_filename, _external=True)
+        return jsonify({'status': 'FAILURE', 'result_url': result_url})
+    else:
+        return jsonify({'status': 'FAILURE', 'error': task.info})
+
+@app.route('/processed/<filename>', methods=['GET'])
+def get_processed(filename):
+    with open(f'processed/{filename}', 'rb') as f:
+        result_bytes = f.read()
+    return Response(result_bytes, mimetype='image/jpeg')
+
+
+
+if __name__ == '__main__':
+    app.run(host='127.0.0.1', port=5555)
